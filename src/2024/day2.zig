@@ -10,9 +10,7 @@ fn is_safe(levels: []i64) bool {
     }
 
     var prev = levels[0];
-
-    var incr = false;
-    var decr = false;
+    var trend: enum { None, Increasing, Decreasing } = .None;
 
     for (levels[1..]) |curr| {
         if (@abs(curr - prev) > 3) {
@@ -20,15 +18,15 @@ fn is_safe(levels: []i64) bool {
         }
 
         if (curr > prev) {
-            if (decr) {
+            if (trend == .Decreasing) {
                 return false;
             }
-            incr = true;
+            trend = .Increasing;
         } else if (curr < prev) {
-            if (incr) {
+            if (trend == .Increasing) {
                 return false;
             }
-            decr = true;
+            trend = .Decreasing;
         } else {
             return false;
         }
