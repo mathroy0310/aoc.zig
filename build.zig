@@ -3,6 +3,7 @@ comptime {
     const required_zig = "0.14.0-dev";
     const current_zig = builtin.zig_version;
     const min_zig = std.SemanticVersion.parse(required_zig) catch unreachable;
+
     if (current_zig.order(min_zig) == .lt) {
         const error_message =
             \\Sorry, it looks like your version of zig is too old. :-(
@@ -223,47 +224,42 @@ fn fetchInputFileIfNotPresent(allocator: Allocator) !void {
             "AOC_SESSION_TOKEN",
         );
 
-        var http_client = http.Client{
-            .allocator = allocator,
-        };
-        defer http_client.deinit();
-
-        var response = std.ArrayList(u8).init(allocator);
-        defer response.deinit();
-
-        const res = try http_client.fetch(.{
-            .location = .{
-                .url = try fmt.allocPrint(
-                    allocator,
-                    "https://adventofcode.com/{s}/day/{s}/input",
-                    .{ YEAR, DAY },
-                ),
-            },
-            .method = .GET,
-            .extra_headers = &[_]http.Header{
-                .{
-                    .name = "Cookie",
-                    .value = try fmt.allocPrint(
-                        allocator,
-                        "session={s}",
-                        .{session_token},
-                    ),
-                },
-            },
-            .response_storage = .{ .dynamic = &response },
-        });
-
-        if (res.status != .ok)
-            return error.FailedToFetchInputFile;
-
-        // Save to disk
-        const dir = try fs.cwd().makeOpenPath(
-            fs.path.dirname(input_path).?,
-            .{},
+        const url = try fmt.allocPrint(
+            allocator,
+            "https://adventofcode.com/{s}/day/{s}/input",
+            .{ YEAR, DAY },
         );
-        const file = try dir.createFile(fs.path.basename(input_path), .{});
-        defer file.close();
-        try file.writeAll(response.items);
+
+        // Create the directory if it doesn't exist
+        try fs.cwd().makePath(fs.path.dirname(input_path).?);
+
+        // Prepare the curl command
+        var child = std.process.Child.init(&[_][]const u8{
+            "curl",
+            "-s", // Silent mode
+            "-b",
+            try fmt.allocPrint(allocator, "session={s}", .{session_token}),
+            "-o",
+            input_path,
+            url,
+        }, allocator);
+
+        // Run the command
+        try child.spawn();
+
+        const term = try child.wait();
+        switch (term) {
+            .Exited => |code| {
+                if (code != 0) {
+                    print("curl failed with exit code {}\n", .{code});
+                    return error.FailedToFetchInputFile;
+                }
+            },
+            else => {
+                print("curl process terminated abnormally\n", .{});
+                return error.FailedToFetchInputFile;
+            },
+        }
     }
 }
 
