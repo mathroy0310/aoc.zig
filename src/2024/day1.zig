@@ -69,7 +69,7 @@ pub fn part2(this: *const @This()) !?i64 {
     return @as(i64, @intCast(similarity_score));
 }
 
-test "it should do nothing" {
+test "example" {
     const allocator = std.testing.allocator;
     const input =
         \\3   4
