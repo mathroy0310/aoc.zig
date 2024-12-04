@@ -298,7 +298,7 @@ fn generateSourceFileIfNotPresent(allocator: Allocator) !void {
             \\    return null;
             \\}
             \\
-            \\test "it should do nothing" {
+            \\test "example" {
             \\    const allocator = std.testing.allocator;
             \\    const input = "";
             \\
