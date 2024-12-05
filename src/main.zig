@@ -22,17 +22,17 @@ pub fn main() !void {
         const elapsed_ns = timer.read();
         const elapsed_ms: f64 = @as(f64, @floatFromInt(elapsed_ns)) / 1_000_000.0;
         try stdout.print(switch (@TypeOf(solution)) {
-            []const u8 => "{s}",
-            else => "{any}",
-        } ++ "| {d:.4}ms\n", .{ solution, elapsed_ms });
+            []const u8 => "[Part 1] result: {s}",
+            else => "[Part 1] result: {any} ",
+        } ++ "| Took: {d:.4}ms\n", .{ solution, elapsed_ms });
     }
     timer.reset();
     if (try problem.part2()) |solution| {
         const elapsed_ns = timer.read();
         const elapsed_ms: f64 = @as(f64, @floatFromInt(elapsed_ns)) / 1_000_000.0;
         try stdout.print(switch (@TypeOf(solution)) {
-            []const u8 => "{s}",
-            else => "{any}",
-        } ++ "| {d:.4}ms\n", .{ solution, elapsed_ms });
+            []const u8 => "[Part 2] result: {s}",
+            else => "[Part 2] result: {any}",
+        } ++ " | Took: {d:.4}ms\n", .{ solution, elapsed_ms });
     }
 }
