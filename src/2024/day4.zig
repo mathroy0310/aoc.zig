@@ -61,18 +61,6 @@ pub fn part2(this: *const @This()) !?i64 {
 
 test "example" {
     const allocator = std.testing.allocator;
-    // const input =
-    //     \\....XXMAS.
-    //     \\.SAMXMS...
-    //     \\...S..A...
-    //     \\..A.A.MS.X
-    //     \\XMASAMX.MM
-    //     \\X.....XA.A
-    //     \\S.S.S.S.SS
-    //     \\.A.A.A.A.A
-    //     \\..M.M.M.MM
-    //     \\.X.X.XMASX
-    // ;
 
     const input =
         \\.M.S......
