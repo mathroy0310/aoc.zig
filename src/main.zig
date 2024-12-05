@@ -17,15 +17,22 @@ pub fn main() !void {
         .allocator = allocator,
     };
 
-    if (try problem.part1()) |solution|
+    var timer = try std.time.Timer.start();
+    if (try problem.part1()) |solution| {
+        const elapsed_ns = timer.read();
+        const elapsed_ms: f64 = @as(f64, @floatFromInt(elapsed_ns)) / 1_000_000.0;
         try stdout.print(switch (@TypeOf(solution)) {
             []const u8 => "{s}",
             else => "{any}",
-        } ++ "\n", .{solution});
-
-    if (try problem.part2()) |solution|
+        } ++ "| {d:.4}ms\n", .{ solution, elapsed_ms });
+    }
+    timer.reset();
+    if (try problem.part2()) |solution| {
+        const elapsed_ns = timer.read();
+        const elapsed_ms: f64 = @as(f64, @floatFromInt(elapsed_ns)) / 1_000_000.0;
         try stdout.print(switch (@TypeOf(solution)) {
             []const u8 => "{s}",
             else => "{any}",
-        } ++ "\n", .{solution});
+        } ++ "| {d:.4}ms\n", .{ solution, elapsed_ms });
+    }
 }
