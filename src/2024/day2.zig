@@ -43,10 +43,10 @@ pub fn part1(this: *const @This()) !?i64 {
     while (lines.next()) |line| {
         var levels = std.mem.tokenizeScalar(u8, line, ' ');
 
-        var level = std.ArrayList(i64).init(this.allocator);
-        defer level.deinit();
+        var level = try std.ArrayList(i64).initCapacity(this.allocator, 4096);
+        defer level.deinit(this.allocator);
         while (levels.next()) |str| {
-            try level.append(try std.fmt.parseInt(i64, str, 10));
+            try level.append(this.allocator, try std.fmt.parseInt(i64, str, 10));
         }
 
         if (is_safe(level.items)) {
@@ -62,18 +62,18 @@ pub fn part2(this: *const @This()) !?i64 {
     while (lines.next()) |line| {
         var levels = std.mem.tokenizeScalar(u8, line, ' ');
 
-        var level = std.ArrayList(i64).init(this.allocator);
-        defer level.deinit();
+        var level = try std.ArrayList(i64).initCapacity(this.allocator, 4096);
+        defer level.deinit(this.allocator);
         while (levels.next()) |str| {
-            try level.append(try std.fmt.parseInt(i64, str, 10));
+            try level.append(this.allocator, try std.fmt.parseInt(i64, str, 10));
         }
 
         if (is_safe(level.items)) {
             counter += 1;
         } else {
             for (0..level.items.len) |i| {
-                var dampened_level = try level.clone();
-                defer dampened_level.deinit();
+                var dampened_level = try level.clone(this.allocator);
+                defer dampened_level.deinit(this.allocator);
                 _ = dampened_level.orderedRemove(i);
 
                 if (is_safe(dampened_level.items)) {

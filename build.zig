@@ -1,6 +1,6 @@
 const builtin = @import("builtin");
 comptime {
-    const required_zig = "0.14.0-dev";
+    const required_zig = "0.15.1";
     const current_zig = builtin.zig_version;
     const min_zig = std.SemanticVersion.parse(required_zig) catch unreachable;
 
@@ -10,7 +10,7 @@ comptime {
             \\
             \\aoc.zig requires development build {}
             \\
-            \\Please download a development ("master") build from
+            \\Please download a development ("0.15.0") build from
             \\
             \\https://ziglang.org/download/
             \\
@@ -42,33 +42,54 @@ pub fn build(b: *Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable(.{
-        .name = "aoc.zig",
+    const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
 
+    const exe = b.addExecutable(.{
+        .name = "aoc",
+        .root_module = exe_mod,
+    });
+
     // Year and day comptime selection
-    const date = timestampToYearAndDay(
+    const date = timestampToDate(
         std.time.timestamp(),
         -5, // AoC is in EST
     );
-    YEAR = b.option(
+
+    const is_december = date.month == 12;
+
+    const year_option = b.option(
         []const u8,
         "year",
         "The year of the Advent of Code challenge",
-    ) orelse try fmt.allocPrint(b.allocator, "{d}", .{date.year});
-    DAY = b.option(
+    );
+    const day_option = b.option(
         []const u8,
         "day",
         "The day of the Advent of Code challenge",
-    ) orelse try fmt.allocPrint(b.allocator, "{d}", .{date.day});
-    // const options = b.addOptions();
-    // options.addOption([]const u8, "YEAR", YEAR);
-    // options.addOption([]const u8, "DAY", DAY);
-    // options.addOption([]const u8, "INPUT_DIR", INPUT_DIR);
-    // exe.root_module.addOptions("config", options);
+    );
+
+    // Validate: if not in December, require both year and day
+    if (!is_december) {
+        if (year_option == null or day_option == null) {
+            print("\nError: You must specify both -Dyear and -Dday when not in December.\n", .{});
+            print("Example: zig build run -Dyear=2024 -Dday=9\n\n", .{});
+            std.process.exit(1);
+        }
+    }
+
+    YEAR = year_option orelse try fmt.allocPrint(b.allocator, "{d}", .{date.year});
+    DAY = day_option orelse try fmt.allocPrint(b.allocator, "{d}", .{date.day});
+
+    const options = b.addOptions();
+    options.addOption([]const u8, "YEAR", YEAR);
+    options.addOption([]const u8, "DAY", DAY);
+    options.addOption([]const u8, "INPUT_DIR", INPUT_DIR);
+
+    exe.root_module.addOptions("config", options);
     exe.root_module.addAnonymousImport(
         "problem",
         .{
@@ -131,7 +152,7 @@ pub fn build(b: *Build) !void {
     run_step.dependOn(&run_cmd.step);
 
     // test
-    const problem_unit_tests = b.addTest(.{
+    const problem_test_mod = b.createModule(.{
         .root_source_file = b.path(
             try fs.path.join(
                 b.allocator,
@@ -149,10 +170,12 @@ pub fn build(b: *Build) !void {
         .target = target,
         .optimize = optimize,
     });
+
+    const problem_unit_tests = b.addTest(.{
+        .root_module = problem_test_mod,
+    });
     const exe_unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = exe_mod,
     });
 
     const run_lib_unit_tests = b.addRunArtifact(problem_unit_tests);
@@ -326,7 +349,7 @@ inline fn isLeapYear(year: i64) bool {
     return (@mod(year, 4) == 0 and @mod(year, 100) != 0) or (@mod(year, 400) == 0);
 }
 
-fn timestampToYearAndDay(timestamp: i64, timezoneOffsetHours: i64) struct { year: i64, day: i64 } {
+fn timestampToDate(timestamp: i64, timezoneOffsetHours: i64) struct { year: i64, month: i64, day: i64 } {
     var year: i64 = 1970;
     const secondsInNormalYear: i64 = 31536000; // 365 days
     const secondsInLeapYear: i64 = 31622400; // 366 days
@@ -364,6 +387,7 @@ fn timestampToYearAndDay(timestamp: i64, timezoneOffsetHours: i64) struct { year
         monthIndex += 1;
     }
 
+    const monthOfYear: i64 = @intCast(monthIndex + 1);
     // Return the year and day of the month
-    return .{ .year = year, .day = dayOfYear };
+    return .{ .year = year, .month = monthOfYear, .day = dayOfYear };
 }

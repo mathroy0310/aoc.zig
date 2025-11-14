@@ -1,7 +1,8 @@
 .{
-    .name = "aoc.zig",
+    .name = .aoc,
     .version = "0.0.0",
     .dependencies = .{},
+    .fingerprint = 0x808a3f8f58a4be83,
     .paths = .{
         "build.zig",
         "build.zig.zon",
