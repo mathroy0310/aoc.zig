@@ -311,13 +311,13 @@ fn generateSourceFileIfNotPresent(allocator: Allocator) !void {
             \\input: []const u8,
             \\allocator: mem.Allocator,
             \\
-            \\pub fn part1(this: *const @This()) !?i64 {
-            \\    _ = this;
+            \\pub fn part1(self: *const @This()) !?i64 {
+            \\    _ = self;
             \\    return null;
             \\}
             \\
-            \\pub fn part2(this: *const @This()) !?i64 {
-            \\    _ = this;
+            \\pub fn part2(self: *const @This()) !?i64 {
+            \\    _ = self;
             \\    return null;
             \\}
             \\
