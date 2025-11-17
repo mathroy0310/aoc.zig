@@ -22,13 +22,13 @@ fn parseRules(allocator: std.mem.Allocator, rules_str: []const u8) !std.AutoArra
 fn processUpdates(allocator: std.mem.Allocator, rules: *const std.AutoArrayHashMap(u8, std.AutoArrayHashMapUnmanaged(u8, void)), updates_str: []const u8, _part2: bool) !i64 {
     var counter: i64 = 0;
     var updatesit = std.mem.tokenizeScalar(u8, updates_str, '\n');
-    var l = std.ArrayList(u8).init(allocator);
-    defer l.deinit();
+    var l = try std.ArrayList(u8).initCapacity(allocator, 512);
+    defer l.deinit(allocator);
     while (updatesit.next()) |upstr| {
         // put the updates into a list
         var updit = std.mem.tokenizeScalar(u8, upstr, ',');
         l.clearRetainingCapacity();
-        while (updit.next()) |up| try l.append(try std.fmt.parseInt(u8, up, 10));
+        while (updit.next()) |up| try l.append(allocator, try std.fmt.parseInt(u8, up, 10));
 
         // check order
         const ok = for (l.items[0 .. l.items.len - 1], l.items[1..]) |curr, next| {

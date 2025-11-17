@@ -1,6 +1,8 @@
 const std = @import("std");
 const heap = std.heap;
 
+const config = @import("config");
+
 const Problem = @import("problem");
 
 pub fn main() !void {
@@ -17,6 +19,7 @@ pub fn main() !void {
         .allocator = allocator,
     };
 
+    try stdout.print("[ADVENT OF CODE] DAY={s}, YEAR={s} \n", .{config.DAY, config.YEAR});
     var timer = try std.time.Timer.start();
     if (try problem.part1()) |solution| {
         const elapsed_ns = timer.read();

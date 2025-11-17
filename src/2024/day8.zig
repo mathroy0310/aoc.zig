@@ -11,7 +11,7 @@ pub fn part1(this: *const @This()) !?isize {
     const extent = std.mem.indexOfScalar(u8, this.input, '\n') orelse return error.InvalidInput;
     var antiNodePoints = std.AutoHashMap(Coord, void).init(this.allocator);
     defer antiNodePoints.deinit();
-    var frequencies = std.AutoHashMap(u8, std.BoundedArray(Coord, 1000)).init(this.allocator);
+    var frequencies = std.AutoHashMap(u8, std.ArrayListUnmanaged(Coord)).init(this.allocator);
     defer frequencies.deinit();
 
     var y: isize = 0;
@@ -24,9 +24,10 @@ pub fn part1(this: *const @This()) !?isize {
             var entry = try frequencies.getOrPut(c);
 
             if (!entry.found_existing) {
-                entry.value_ptr.* = try std.BoundedArray(Coord, 1000).init(0);
+                entry.value_ptr.* = try std.ArrayListUnmanaged(Coord).initCapacity(this.allocator, 0);
+                try entry.value_ptr.ensureTotalCapacity(this.allocator, 1000);
             }
-            try entry.value_ptr.append(.{ .x = @intCast(x), .y = y });
+            try entry.value_ptr.append(this.allocator, .{ .x = @intCast(x), .y = y });
         }
         y += 1;
     }
@@ -34,7 +35,8 @@ pub fn part1(this: *const @This()) !?isize {
     var freqIter = frequencies.iterator();
 
     while (freqIter.next()) |e| {
-        const slice = e.value_ptr.slice();
+        defer e.value_ptr.*.deinit(this.allocator);
+        const slice = e.value_ptr.items;
 
         for (slice, 0..) |p1, i| {
             for (slice[(i + 1)..]) |p2| {
@@ -66,7 +68,7 @@ pub fn part2(this: *const @This()) !?isize {
     const extent = std.mem.indexOfScalar(u8, this.input, '\n') orelse return error.InvalidInput;
     var antiNodePoints = std.AutoHashMap(Coord, void).init(this.allocator);
     defer antiNodePoints.deinit();
-    var frequencies = std.AutoHashMap(u8, std.BoundedArray(Coord, 1000)).init(this.allocator);
+    var frequencies = std.AutoHashMap(u8, std.ArrayListUnmanaged(Coord)).init(this.allocator);
     defer frequencies.deinit();
 
     var y: isize = 0;
@@ -79,9 +81,10 @@ pub fn part2(this: *const @This()) !?isize {
             var entry = try frequencies.getOrPut(c);
 
             if (!entry.found_existing) {
-                entry.value_ptr.* = try std.BoundedArray(Coord, 1000).init(0);
+                entry.value_ptr.* = try std.ArrayListUnmanaged(Coord).initCapacity(this.allocator, 0);
+                try entry.value_ptr.ensureTotalCapacity(this.allocator, 1000);
             }
-            try entry.value_ptr.append(.{ .x = @intCast(x), .y = y });
+            try entry.value_ptr.append(this.allocator, .{ .x = @intCast(x), .y = y });
         }
         y += 1;
     }
@@ -89,7 +92,8 @@ pub fn part2(this: *const @This()) !?isize {
     var freqIter = frequencies.iterator();
 
     while (freqIter.next()) |e| {
-        const slice = e.value_ptr.slice();
+        defer e.value_ptr.*.deinit(this.allocator);
+        const slice = e.value_ptr.items;
 
         for (slice, 0..) |p1, i| {
             for (slice[(i + 1)..]) |p2| {

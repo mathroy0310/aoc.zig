@@ -45,12 +45,12 @@ pub fn part1(this: *const @This()) !?i64 {
     while (rowsIter.next()) |row| {
         var numbersIter = std.mem.tokenizeAny(u8, row, ": ");
         const target = try std.fmt.parseInt(usize, numbersIter.next() orelse return error.InvalidInput, 10);
-        var list = std.ArrayList(usize).init(this.allocator);
-        defer list.deinit();
+        var list = try std.ArrayList(usize).initCapacity(this.allocator, 512);
+        defer list.deinit(this.allocator);
 
         while (numbersIter.next()) |num| {
             const n = try std.fmt.parseInt(usize, num, 10);
-            try list.append(n);
+            try list.append(this.allocator, n);
         }
 
         if (try recursiveSum(list.items, 0, target, false)) |_| {
@@ -68,12 +68,12 @@ pub fn part2(this: *const @This()) !?i64 {
     while (rowsIter.next()) |row| {
         var numbersIter = std.mem.tokenizeAny(u8, row, ": ");
         const target = try std.fmt.parseInt(usize, numbersIter.next() orelse return error.InvalidInput, 10);
-        var list = std.ArrayList(usize).init(this.allocator);
-        defer list.deinit();
+        var list = try std.ArrayList(usize).initCapacity(this.allocator, 512);
+        defer list.deinit(this.allocator);
 
         while (numbersIter.next()) |num| {
             const n = try std.fmt.parseInt(usize, num, 10);
-            try list.append(n);
+            try list.append(this.allocator, n);
         }
 
         if (try recursiveSum(list.items, 0, target, true)) |_| {
