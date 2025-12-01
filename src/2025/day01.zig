@@ -61,43 +61,28 @@ pub fn part2(self: *const @This()) !?i64 {
     var zero_count: i64 = 0;
 
     for (rotations.items) |rotation| {
-        const start_pos = position;
+        var clicks_remaining = rotation.distance;
 
-        if (rotation.direction == 'L') {
-            // Gauche
-            position = position - rotation.distance;
-            position = @mod(@mod(position, 100) + 100, 100);
-            zero_count += countZeroCrossings(start_pos, rotation.distance, true);
-        } else {
-            // Droite
-            position = position + rotation.distance;
-            const final_pos = @mod(position, 100);
-            zero_count += countZeroCrossings(start_pos, rotation.distance, false);
-            position = final_pos;
+        while (clicks_remaining > 0) : (clicks_remaining -= 1) {
+            if (rotation.direction == 'L') {
+                position -= 1;
+                if (position < 0) {
+                    position = 99;
+                }
+            } else {
+                position += 1;
+                if (position >= 100) {
+                    position = 0;
+                }
+            }
+
+            if (position == 0) {
+                zero_count += 1;
+            }
         }
     }
 
     return zero_count;
-}
-
-fn countZeroCrossings(start: i32, distance: i32, going_left: bool) i64 {
-    var count: i64 = 0;
-    const complete_laps = @divFloor(distance, 100);
-    count += complete_laps;
-
-    const remaining = @mod(distance, 100);
-    
-    if (going_left) {
-        if (start < remaining) {
-            count += 1;
-        }
-    } else {
-        if (start + remaining >= 100) {
-            count += 1;
-        }
-    }
-
-    return count;
 }
 
 test "example" {
