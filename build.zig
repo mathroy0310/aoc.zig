@@ -95,11 +95,15 @@ fn getDayConfig(b: *Build) !DayConfig {
         print("For running one day: zig build run -Dyear=2024 -Dday=9\n\n", .{});
         std.process.exit(1);
     }
-
     return .{
         .year = year_option orelse try fmt.allocPrint(b.allocator, "{d}", .{date.year}),
-        .day = day_option orelse try fmt.allocPrint(b.allocator, "{d}", .{date.day}),
+        .day = if (day_option) |d| try padDay(b.allocator, d) else try fmt.allocPrint(b.allocator, "{d:0>2}", .{date.day}),
     };
+}
+
+fn padDay(allocator: Allocator, day: []const u8) ![]const u8 {
+    const day_num = try fmt.parseInt(u8, day, 10);
+    return try fmt.allocPrint(allocator, "{d:0>2}", .{day_num});
 }
 
 fn isRunAllCommand() bool {
