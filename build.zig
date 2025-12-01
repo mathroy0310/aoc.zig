@@ -95,9 +95,10 @@ fn getDayConfig(b: *Build) !DayConfig {
         print("For running one day: zig build run -Dyear=2024 -Dday=9\n\n", .{});
         std.process.exit(1);
     }
+
     return .{
         .year = year_option orelse try fmt.allocPrint(b.allocator, "{d}", .{date.year}),
-        .day = if (day_option) |d| try padDay(b.allocator, d) else try fmt.allocPrint(b.allocator, "{d:0>2}", .{date.day}),
+        .day = if (day_option) |d| try padDay(b.allocator, d) else try padDay(b.allocator, try fmt.allocPrint(b.allocator, "{d}", .{date.day})),
     };
 }
 
@@ -290,25 +291,34 @@ fn buildRunAllStep(
 
     if (days.items.len == 0) {
         print("No source files found for year {s}\n", .{year});
+        print("Hint: Run 'zig build run -Dyear={s} -Dday=1' first to create source files\n", .{year});
         return;
     }
 
     var previous_step: ?*Step = null;
 
     for (days.items) |day_num| {
-        const day_str = try fmt.allocPrint(b.allocator, "{d}", .{day_num});
+        const day_str = try fmt.allocPrint(b.allocator, "{d:0>2}", .{day_num});
         const config = DayConfig{ .year = year, .day = day_str };
 
-        const day_exe = try buildDayExecutableForRunAll(b, target, optimize, config);
+        // Check if both source and input files exist
+        const src_path = try buildPath(b.allocator, &.{
+            SRC_DIR,
+            config.year,
+            try fmt.allocPrint(b.allocator, "day{s}.zig", .{config.day}),
+        });
 
-        // Check if input file exists, skip if not
         const input_path = try buildPath(b.allocator, &.{
             INPUT_DIR,
             config.year,
             try fmt.allocPrint(b.allocator, "day{s}.txt", .{config.day}),
         });
 
+        // Skip if either file doesn't exist
+        fs.cwd().access(src_path, .{}) catch continue;
         fs.cwd().access(input_path, .{}) catch continue;
+
+        const day_exe = try buildDayExecutableForRunAll(b, target, optimize, config);
 
         const install_artifact = b.addInstallArtifact(day_exe, .{
             .dest_dir = .{ .override = .{ .custom = year } },
@@ -411,10 +421,14 @@ fn fetchFromAocServer(allocator: Allocator, input_path: []const u8, config: DayC
         return error.EnvironmentVariableNotFound;
     };
 
+    // Remove leading zeros for the URL (AoC expects "1" not "01")
+    const day_num = try fmt.parseInt(u8, config.day, 10);
+    const url_day = try fmt.allocPrint(allocator, "{d}", .{day_num});
+
     const url = try fmt.allocPrint(
         allocator,
         "https://adventofcode.com/{s}/day/{s}/input",
-        .{ config.year, config.day },
+        .{ config.year, url_day },
     );
 
     try fs.cwd().makePath(fs.path.dirname(input_path).?);
