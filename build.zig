@@ -62,8 +62,10 @@ pub fn build(b: *Build) !void {
     createRunStep(b, exe);
 
     // Run-all step
-    const run_all_step = b.step("run-all", "Run all available days for the year");
-    try buildRunAllStep(b, run_all_step, target, optimize, day_config.year);
+    if (isRunAllCommand()) {
+        const run_all_step = b.step("run-all", "Run all available days for the year");
+        try buildRunAllStep(b, run_all_step, target, optimize, day_config.year);
+    }
 
     // Test step
     try createTestStep(b, target, optimize, day_config, setup_step);
@@ -290,7 +292,7 @@ fn buildRunAllStep(
     defer days.deinit(b.allocator);
 
     if (days.items.len == 0) {
-        print("No source files found for year {s}\n", .{year});
+        print("\nError: No source files found for year {s}\n", .{year});
         print("Hint: Run 'zig build run -Dyear={s} -Dday=1' first to create source files\n", .{year});
         return;
     }
@@ -315,8 +317,16 @@ fn buildRunAllStep(
         });
 
         // Skip if either file doesn't exist
-        fs.cwd().access(src_path, .{}) catch continue;
-        fs.cwd().access(input_path, .{}) catch continue;
+        fs.cwd().access(src_path, .{}) catch {
+            print("\nWarning: No source file found for day {d}\n", .{day_num});
+            print("Hint: Run 'zig build -Dday{d} -Dyear={s} ' first to fetch source file\n", .{ day_num, year });
+            continue;
+        };
+        fs.cwd().access(input_path, .{}) catch {
+            print("\nWarning: No input file found for day {d}\n", .{day_num});
+            print("Hint: Run 'zig build -Dday{d} -Dyear={s} ' first to fetch input file\n", .{ day_num, year });
+            continue;
+        };
 
         const day_exe = try buildDayExecutableForRunAll(b, target, optimize, config);
 

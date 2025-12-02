@@ -19,7 +19,7 @@ pub fn main() !void {
         .allocator = allocator,
     };
 
-    try stdout.print("[ADVENT OF CODE] DAY={s}, YEAR={s} \n", .{config.DAY, config.YEAR});
+    try stdout.print("[ADVENT OF CODE] DAY={s}, YEAR={s} \n", .{ config.DAY, config.YEAR });
     var timer = try std.time.Timer.start();
     if (try problem.part1()) |solution| {
         const elapsed_ns = timer.read();
@@ -39,6 +39,6 @@ pub fn main() !void {
             else => "[Part 2] result: {any}",
         } ++ " | Took: {d:.4}ms\n", .{ solution, elapsed_ms });
     }
-
+    try stdout.print("\n", .{});
     try stdout.flush();
 }
