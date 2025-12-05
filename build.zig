@@ -1,6 +1,6 @@
 const builtin = @import("builtin");
 comptime {
-    const required_zig = "0.15.1";
+    const required_zig = "0.15.2";
     const current_zig = builtin.zig_version;
     const min_zig = std.SemanticVersion.parse(required_zig) catch unreachable;
 
@@ -8,9 +8,9 @@ comptime {
         const error_message =
             \\Sorry, it looks like your version of zig is too old. :-(
             \\
-            \\aoc.zig requires 0.15.1 build {}
+            \\aoc.zig requires 0.15.2 build {}
             \\
-            \\Please download v0.15.1" build from
+            \\Please download v0.15.2" build from
             \\
             \\https://ziglang.org/download/
             \\
